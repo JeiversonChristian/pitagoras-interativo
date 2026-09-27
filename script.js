@@ -3,24 +3,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const seletorTernos = document.getElementById('ternos');
     const btnReiniciar = document.getElementById('reiniciar');
 
-    let u = 35; // Tamanho base da unidade
+    let u = 35; 
     let elementoArrastado = null;
-    let slotOrigem = null; // Vai guardar a "casa" original do quadradinho
+    let slotOrigem = null; 
 
     function desenharBrinquedo(a, b, c) {
         simuladorArea.innerHTML = '';
         const container = document.createElement('div');
         container.className = 'container-teorema';
         
-        // Ajusta escala baseada na tela
-        u = Math.min((window.innerWidth * 0.7) / (a + b + c), (window.innerHeight * 0.6) / (a + b + c));
-        if(u > 45) u = 45;
+        // Verifica se é celular (telas menores que 768px de largura)
+        const isMobile = window.innerWidth <= 768;
+        
+        let fontSizeRotulo, fontSizeValores;
+
+        if (isMobile) {
+            // LÓGICA EXCLUSIVA PARA CELULAR
+            // Usa (a + b + c) inteiro como divisor para garantir que NUNCA encoste nas bordas
+            u = (window.innerWidth * 0.85) / (a + b + c); 
+            if(u > 35) u = 35; // Teto máximo para não exagerar no 3,4,5
+            
+            // Fontes proporcionais ao tamanho da figura no celular para não vazar do triângulo
+            fontSizeRotulo = Math.max(9, u * 0.6); 
+            fontSizeValores = Math.max(14, u * 0.8);
+            
+            // Centralização específica para o eixo do celular (empurra um pouco para baixo)
+            container.style.width = `${b * u}px`;
+            container.style.height = `${a * u}px`;
+            container.style.transform = `translate(${a * u / 2}px, ${(c * u) / 4}px)`;
+
+        } else {
+            // LÓGICA EXCLUSIVA PARA COMPUTADOR/TV (Mantida exatamente como estava antes)
+            u = Math.min((window.innerWidth * 0.7) / (a + b + c), (window.innerHeight * 0.6) / (a + b + c));
+            if(u > 45) u = 45;
+            
+            fontSizeRotulo = 16; // Fixo no PC
+            fontSizeValores = 24; // Fixo no PC
+            
+            // Centralização original do PC
+            container.style.transform = `translate(${a*u/2}px, -${a*u/2}px)`;
+        }
         
         // Calculo da angulação (Trigonometria)
         const anguloRad = Math.atan2(a, b);
         const angulo = anguloRad * (180 / Math.PI);
 
-        // Desenhando o triângulo perfeitamente com SVG (Cor Azul Diferente: #64b5f6)
+        // Desenhando o triângulo
         const triangulo = document.createElement('div');
         triangulo.style.position = 'absolute';
         triangulo.style.width = `${b * u}px`;
@@ -33,49 +61,56 @@ document.addEventListener('DOMContentLoaded', () => {
             </svg>
         `;
 
-        // --- Nomes dos lados (Alinhados com a borda) ---
+        // Distâncias de margem interna dos nomes (dinâmica no celular, fixa no PC)
+        const margemA = isMobile ? (u * 0.5) : 20;
+        const margemB = isMobile ? (u * 0.5) : 15;
+        const margemC = isMobile ? (u * 0.6) : 20;
+
+        // --- Nomes dos lados ---
         const lblCatetoA = document.createElement('div');
         lblCatetoA.className = 'rotulo';
         lblCatetoA.innerText = 'Cateto';
-        lblCatetoA.style.left = `20px`; // Levemente dentro do triângulo
+        lblCatetoA.style.fontSize = `${fontSizeRotulo}px`;
+        lblCatetoA.style.left = `${margemA}px`; 
         lblCatetoA.style.top = `${a*u/2}px`;
         lblCatetoA.style.transform = 'translate(-50%, -50%) rotate(-90deg)';
 
         const lblCatetoB = document.createElement('div');
         lblCatetoB.className = 'rotulo';
         lblCatetoB.innerText = 'Cateto';
+        lblCatetoB.style.fontSize = `${fontSizeRotulo}px`;
         lblCatetoB.style.left = `${b*u/2}px`;
-        lblCatetoB.style.top = `${a*u - 15}px`;
+        lblCatetoB.style.top = `${a*u - margemB}px`;
         lblCatetoB.style.transform = 'translate(-50%, -50%) rotate(0deg)';
 
         const lblHipo = document.createElement('div');
         lblHipo.className = 'rotulo';
         lblHipo.innerText = 'Hipotenusa';
-        // Afasta um pouco o texto da borda perpendicularmente
-        lblHipo.style.left = `${b*u/2 - 20 * Math.sin(anguloRad)}px`;
-        lblHipo.style.top = `${a*u/2 - 20 * Math.cos(anguloRad)}px`;
+        lblHipo.style.fontSize = `${fontSizeRotulo}px`;
+        lblHipo.style.left = `${b*u/2 - margemC * Math.sin(anguloRad)}px`;
+        lblHipo.style.top = `${a*u/2 - margemC * Math.cos(anguloRad)}px`;
         lblHipo.style.transform = `translate(-50%, -50%) rotate(${angulo}deg)`;
 
         // --- Quadrados Menores ---
         const quadA = criarCaixaGrid(a, a, u, `-${a * u}px`, `0px`, 0);
         preencherGrid(quadA, a * a, 'vermelho');
         
-        // Número do tamanho do Quadrado A (Fica à esquerda)
         const valA = document.createElement('div');
         valA.className = 'valor-lado';
         valA.innerText = a;
+        valA.style.fontSize = `${fontSizeValores}px`;
         valA.style.right = '100%';
         valA.style.top = '50%';
-        valA.style.transform = 'translate(-15px, -50%)';
+        valA.style.transform = 'translate(-10px, -50%)';
         quadA.appendChild(valA);
 
         const quadB = criarCaixaGrid(b, b, u, `0px`, `${a * u}px`, 0);
         preencherGrid(quadB, b * b, 'bege');
 
-        // Número do tamanho do Quadrado B (Fica abaixo)
         const valB = document.createElement('div');
         valB.className = 'valor-lado';
         valB.innerText = b;
+        valB.style.fontSize = `${fontSizeValores}px`;
         valB.style.top = '100%';
         valB.style.left = '50%';
         valB.style.transform = 'translate(-50%, 10px)';
@@ -86,10 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         quadC.style.transformOrigin = "bottom left";
         preencherSlotsVazios(quadC, c * c);
 
-        // Número do tamanho do Quadrado C (Fica acima, acompanhando a rotação)
         const valC = document.createElement('div');
         valC.className = 'valor-lado';
         valC.innerText = c;
+        valC.style.fontSize = `${fontSizeValores}px`;
         valC.style.bottom = '100%';
         valC.style.left = '50%';
         valC.style.transform = 'translate(-50%, -10px)';
@@ -103,8 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
         container.appendChild(quadB);
         container.appendChild(quadC);
         
-        // Centraliza a figura no meio da tela
-        container.style.transform = `translate(${a*u/2}px, -${a*u/2}px)`;
         simuladorArea.appendChild(container);
     }
 
@@ -121,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return caixa;
     }
 
-    // Agora criamos um slot vazio e botamos o quadradinho dentro, para evitar bugs na devolução!
     function preencherGrid(caixa, quantidade, corClass) {
         for (let i = 0; i < quantidade; i++) {
             const slot = document.createElement('div');
@@ -144,15 +176,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Lógica de Arraste à Prova de Bugs ---
     function iniciarArraste(e) {
         if (!e.target.classList.contains('quadradinho')) return;
         e.preventDefault();
 
         elementoArrastado = e.target;
-        slotOrigem = elementoArrastado.parentElement; // Guarda de onde ele saiu!
+        slotOrigem = elementoArrastado.parentElement; 
         
-        // Trava o tamanho enquanto arrasta
         elementoArrastado.style.width = `${u}px`;
         elementoArrastado.style.height = `${u}px`;
         elementoArrastado.style.position = 'fixed';
@@ -181,18 +211,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const elementoAbaixo = document.elementFromPoint(e.clientX, e.clientY);
         elementoArrastado.style.display = 'block';
 
-        // Reseta o estilo para ocupar 100% do novo slot
         elementoArrastado.style.position = 'relative';
         elementoArrastado.style.left = '0';
         elementoArrastado.style.top = '0';
         elementoArrastado.style.width = '100%';
         elementoArrastado.style.height = '100%';
 
-        // Verifica se soltou exatamente dentro de um slot vazio válido
         if (elementoAbaixo && elementoAbaixo.classList.contains('slot-vazio') && elementoAbaixo.children.length === 0) {
             elementoAbaixo.appendChild(elementoArrastado);
         } else {
-            // Se soltou fora ou num lugar inválido, DEVOLVE para a casinha original!
             if (slotOrigem) {
                 slotOrigem.appendChild(elementoArrastado);
             }
@@ -209,6 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     seletorTernos.addEventListener('change', initSimulation);
     btnReiniciar.addEventListener('click', initSimulation);
+    
+    // Recalcula o tamanho se o usuário girar a tela do celular ou redimensionar o navegador
     window.addEventListener('resize', initSimulation);
 
     initSimulation();

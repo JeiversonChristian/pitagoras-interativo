@@ -6,7 +6,7 @@ Através de uma interface gamificada de arrastar e soltar (drag and drop), os es
 
 ## 🚀 Acesse o Simulador Online
 
-Você pode testar e utilizar o simulador diretamente pelo navegador, sem precisar instalar nada, acessando o link abaixo (hospedado via GitHub Pages):
+Você pode testar e utilizar o simulador diretamente pelo navegador, sem precisar instalar nada, acessando o link abaixo ( hospedado via GitHub Pages ):
 
 🔗 [**Clique aqui para acessar o Simulador do Teorema de Pitágoras**](https://JeiversonChristian.github.io/pitagoras-interativo/)
 
