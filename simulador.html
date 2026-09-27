@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador - Teorema de Pitágoras</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="controles">
+        <a href="index.html" class="btn-voltar">⬅ Voltar</a>
+        <label for="ternos">Escolha as medidas (Catetos e Hipotenusa): </label>
+        <select id="ternos">
+            <option value="3,4,5">3, 4, 5</option>
+            <option value="6,8,10">6, 8, 10</option>
+            <option value="5,12,13">5, 12, 13</option>
+            <option value="9,12,15">9, 12, 15</option>
+            <option value="8,15,17">8, 15, 17</option>
+            <option value="12,16,20">12, 16, 20</option>
+            <option value="7,24,25">7, 24, 25</option>
+        </select>
+        <button id="reiniciar" class="btn-acao">Reiniciar Posições</button>
+    </div>
+
+    <div id="area-simulador">
+        <!-- O desenho geométrico será gerado via JavaScript -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
