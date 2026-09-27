@@ -2,71 +2,93 @@ document.addEventListener('DOMContentLoaded', () => {
     const simuladorArea = document.getElementById('area-simulador');
     const seletorTernos = document.getElementById('ternos');
     const btnReiniciar = document.getElementById('reiniciar');
+    const btnVoltar = document.querySelector('.btn-voltar');
 
     let u = 35; 
     let elementoArrastado = null;
     let slotOrigem = null; 
+    let metaVitoria = 0; // Guardará o número de peças para ganhar
+
+    // --- MÁGICA DOS SONS (Web Audio API) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function tocarSom(frequencia, tipo = 'sine', duracao = 0.1, volume = 0.1) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = tipo;
+        osc.frequency.setValueAtTime(frequencia, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duracao);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duracao);
+    }
+
+    function tocarSomClique() { tocarSom(600, 'sine', 0.1); }
+    function tocarSomPegar() { tocarSom(400, 'triangle', 0.1); }
+    function tocarSomSoltar() { tocarSom(800, 'sine', 0.15); }
+    function tocarSomSucesso() {
+        // Toca uma musiquinha de vitória rápida (Arpejo)
+        setTimeout(() => tocarSom(523.25, 'triangle', 0.2, 0.2), 0);
+        setTimeout(() => tocarSom(659.25, 'triangle', 0.2, 0.2), 150);
+        setTimeout(() => tocarSom(783.99, 'triangle', 0.2, 0.2), 300);
+        setTimeout(() => tocarSom(1046.50, 'triangle', 0.4, 0.2), 450);
+    }
+    // ---------------------------------------
 
     function desenharBrinquedo(a, b, c) {
         simuladorArea.innerHTML = '';
         const container = document.createElement('div');
         container.className = 'container-teorema';
         
-        // Verifica se é celular (telas menores que 768px de largura)
+        metaVitoria = c * c; // Define quantas peças a hipotenusa precisa
+
         const isMobile = window.innerWidth <= 768;
-        
         let fontSizeRotulo, fontSizeValores;
 
         if (isMobile) {
-            // LÓGICA EXCLUSIVA PARA CELULAR
-            // Usa (a + b + c) inteiro como divisor para garantir que NUNCA encoste nas bordas
             u = (window.innerWidth * 0.85) / (a + b + c); 
-            if(u > 35) u = 35; // Teto máximo para não exagerar no 3,4,5
+            if(u > 35) u = 35; 
             
-            // Fontes proporcionais ao tamanho da figura no celular para não vazar do triângulo
             fontSizeRotulo = Math.max(9, u * 0.6); 
             fontSizeValores = Math.max(14, u * 0.8);
             
-            // Centralização específica para o eixo do celular (empurra um pouco para baixo)
             container.style.width = `${b * u}px`;
             container.style.height = `${a * u}px`;
             container.style.transform = `translate(${a * u / 2}px, ${(c * u) / 4}px)`;
-
         } else {
-            // LÓGICA EXCLUSIVA PARA COMPUTADOR/TV (Mantida exatamente como estava antes)
             u = Math.min((window.innerWidth * 0.7) / (a + b + c), (window.innerHeight * 0.6) / (a + b + c));
             if(u > 45) u = 45;
             
-            fontSizeRotulo = 16; // Fixo no PC
-            fontSizeValores = 24; // Fixo no PC
+            fontSizeRotulo = 16; 
+            fontSizeValores = 24; 
             
-            // Centralização original do PC
             container.style.transform = `translate(${a*u/2}px, -${a*u/2}px)`;
         }
         
-        // Calculo da angulação (Trigonometria)
         const anguloRad = Math.atan2(a, b);
         const angulo = anguloRad * (180 / Math.PI);
 
-        // Desenhando o triângulo
         const triangulo = document.createElement('div');
         triangulo.style.position = 'absolute';
         triangulo.style.width = `${b * u}px`;
         triangulo.style.height = `${a * u}px`;
         triangulo.style.left = '0px';
         triangulo.style.top = '0px';
-        triangulo.innerHTML = `
-            <svg width="100%" height="100%" style="display: block; overflow: visible;">
-                <polygon points="0,0 0,${a*u} ${b*u},${a*u}" fill="#64b5f6" stroke="#333" stroke-width="2"/>
-            </svg>
-        `;
+        triangulo.innerHTML = `<svg width="100%" height="100%" style="display: block; overflow: visible;"><polygon points="0,0 0,${a*u} ${b*u},${a*u}" fill="#64b5f6" stroke="#333" stroke-width="2"/></svg>`;
 
-        // Distâncias de margem interna dos nomes (dinâmica no celular, fixa no PC)
         const margemA = isMobile ? (u * 0.5) : 20;
         const margemB = isMobile ? (u * 0.5) : 15;
         const margemC = isMobile ? (u * 0.6) : 20;
 
-        // --- Nomes dos lados ---
         const lblCatetoA = document.createElement('div');
         lblCatetoA.className = 'rotulo';
         lblCatetoA.innerText = 'Cateto';
@@ -91,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         lblHipo.style.top = `${a*u/2 - margemC * Math.cos(anguloRad)}px`;
         lblHipo.style.transform = `translate(-50%, -50%) rotate(${angulo}deg)`;
 
-        // --- Quadrados Menores ---
         const quadA = criarCaixaGrid(a, a, u, `-${a * u}px`, `0px`, 0);
         preencherGrid(quadA, a * a, 'vermelho');
         
@@ -116,9 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
         valB.style.transform = 'translate(-50%, 10px)';
         quadB.appendChild(valB);
 
-        // --- Quadrado Maior (Hipotenusa) ---
         const quadC = criarCaixaGrid(c, c, u, `0px`, `-${c * u}px`, angulo);
         quadC.style.transformOrigin = "bottom left";
+        quadC.id = "quadrado-hipotenusa"; // Identificador para checar a vitória
         preencherSlotsVazios(quadC, c * c);
 
         const valC = document.createElement('div');
@@ -180,6 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!e.target.classList.contains('quadradinho')) return;
         e.preventDefault();
 
+        tocarSomPegar(); // Toca som ao pegar
+
         elementoArrastado = e.target;
         slotOrigem = elementoArrastado.parentElement; 
         
@@ -219,6 +242,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (elementoAbaixo && elementoAbaixo.classList.contains('slot-vazio') && elementoAbaixo.children.length === 0) {
             elementoAbaixo.appendChild(elementoArrastado);
+            tocarSomSoltar(); // Toca som ao encaixar certo
+            
+            // Verifica se o usuário ganhou
+            setTimeout(() => {
+                const pecasNaHipotenusa = document.querySelectorAll('#quadrado-hipotenusa .quadradinho').length;
+                if (pecasNaHipotenusa === metaVitoria) {
+                    tocarSomSucesso();
+                    confetti({
+                        particleCount: 150,
+                        spread: 80,
+                        origin: { y: 0.6 }
+                    });
+                }
+            }, 50);
+
         } else {
             if (slotOrigem) {
                 slotOrigem.appendChild(elementoArrastado);
@@ -234,10 +272,23 @@ document.addEventListener('DOMContentLoaded', () => {
         desenharBrinquedo(valores[0], valores[1], valores[2]);
     }
 
-    seletorTernos.addEventListener('change', initSimulation);
-    btnReiniciar.addEventListener('click', initSimulation);
+    // Eventos dos botões com sons
+    seletorTernos.addEventListener('change', () => {
+        tocarSomClique();
+        initSimulation();
+    });
+
+    btnReiniciar.addEventListener('click', () => {
+        tocarSomClique();
+        initSimulation();
+    });
+
+    btnVoltar.addEventListener('click', function(e) {
+        e.preventDefault();
+        tocarSomClique();
+        setTimeout(() => window.location.href = this.href, 150);
+    });
     
-    // Recalcula o tamanho se o usuário girar a tela do celular ou redimensionar o navegador
     window.addEventListener('resize', initSimulation);
 
     initSimulation();

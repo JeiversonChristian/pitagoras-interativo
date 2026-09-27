@@ -22,7 +22,27 @@
         
         <p>Aprenda de forma interativa como a soma dos quadrados dos catetos é igual ao quadrado da hipotenusa!</p>
         
-        <a href="simulador.html" class="btn-play">▶ PLAY</a>
+        <a href="simulador.html" class="btn-play" id="btnPlay">▶ PLAY</a>
     </main>
+
+    <!-- Mágica do som no botão Play -->
+    <script>
+        document.getElementById('btnPlay').addEventListener('click', function(e) {
+            e.preventDefault(); 
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = 600;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+            
+            setTimeout(() => { window.location.href = this.href; }, 150);
+        });
+    </script>
 </body>
 </html>

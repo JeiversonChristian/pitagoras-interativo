@@ -192,3 +192,22 @@ select {
 .quadradinho:active {
     cursor: grabbing;
 }
+
+/* --- INSTRUÇÃO DA PÁGINA DO SIMULADOR --- */
+.instrucao-simulador {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    padding: 12px 20px;
+    background-color: #e8f4f8;
+    border-bottom: 2px solid #b3d4e0;
+    width: 100%;
+    z-index: 10;
+}
+
+@media (max-width: 600px) {
+    .instrucao-simulador {
+        font-size: 0.95rem;
+        padding: 10px;
+    }
+}
